@@ -3,9 +3,14 @@
 #include <iomanip>
 #include "omp.h"
 #include "stdlib.h"
-
-//В ++ реализовано std::harware_constructive_interference_size и
-//std::harware_destructive_interference_size
+#include <new>
+#include <thread>
+#include <chrono>
+//alignas
+struct partial_t {
+	alignas(std::hardware_destructive_interference_size)
+	unsigned value;
+};
 
 //Выравнивание элементов данных
 /*
@@ -54,7 +59,7 @@ unsigned sum_round_robin(std::vector<unsigned> v, unsigned n) {
 	unsigned sum = 0;
 	unsigned T = 0;
 	// Введём массив сумм каждого потока
-	unsigned* part_sum;
+	partial_t* part_sum;
 
 	#pragma omp parallel
 	{
@@ -64,58 +69,77 @@ unsigned sum_round_robin(std::vector<unsigned> v, unsigned n) {
 		#pragma omp single 
 		{
 			T = omp_get_num_threads();
-			part_sum = (unsigned*)calloc(sizeof v[0], T);
+			part_sum = (partial_t*)malloc(sizeof(partial_t) * T);
 		}
-		for (int i = t; i < n; i += T) {
-			part_sum[t] += v.at(i);
+		part_sum[t].value = 0;
+		for (int i = t; i < n; i += T) 
+		{
+			part_sum[t].value += v.at(i);
 		}
 	}
-	sum = part_sum[0];
-	for (int i = 1; i < T; ++i) {
-		sum += part_sum[i];
+	for (int i = 0; i < T; ++i) {
+		sum += part_sum[i].value;
 	}
 	free(part_sum);
 	return sum;
 }
 
-//unsigned round_robin(std::vector <unsigned> v, unsigned n) {
-//	n = v.size();
-//#pragma omp parallel 
-//	{
-//		int T = omp_get_num_threads();
-//		int s = n / T;
-//		int b = n % T;
-//		unsigned t = omp_get_thread_num();
-//		if (t < b)
-//			b = ++s * t;
-//		else
-//			b += s * t;
-//		int e = b + s;
-//		for (int i_start = b; i_start < e; i_start++)
-//		{
-//			//part_sum += v[i]
-//		}
-//		//sum = part_sum[0...t]
-//	}
-//	
-//}
-// 
+unsigned round_robin(std::vector <unsigned> v, unsigned n) {
+	n = v.size();
+	partial_t* part_sum;
+	int T;
+	int sum = 0;
+	#pragma omp parallel 
+	{
+		unsigned t = omp_get_thread_num();
+		#pragma omp single 
+		{
+			T = omp_get_num_threads();
+			part_sum = (partial_t*)malloc(sizeof(partial_t) * T);
+		}
+		part_sum[t].value = 0;
+		int s = n / T;
+		int b = n % T;
+		
+		if (t < b)
+			b = (s+1) * t;
+		else
+			b += s * t;
+
+		int e = b + s;
+		
+		for (int i = b; i < e; i++)
+		{
+			part_sum[t].value += v[i];
+		}
+	}
+	for (int j = 0; j < T; j++)
+	{
+		sum += part_sum[j].value;
+	}
+	free(part_sum);
+	return sum;
+}
+
 // Эпоха - это фиксированная дата. Иногда это 1970-й год, 1980-й год и др.
 int main() {
-	
 	
 	std::vector <unsigned> vec(1 << 28, 3);
 	double t0 = omp_get_wtime();
 	std::cout << sum_round_robin(vec, vec.size()) << "\n";
-	std::cout << "Took " << (omp_get_wtime() - t0)*1000 << " ms\n";
+	std::cout << "Round robin " << (omp_get_wtime() - t0)*1000 << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
 	t0 = omp_get_wtime();
 	std::cout << sum_omp_reduce(vec, vec.size()) << "\n";
-	std::cout << "Took " << (omp_get_wtime() - t0) * 1000 << " ms\n";
+	std::cout << "Omp reduce " << (omp_get_wtime() - t0) * 1000 << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
 	t0 = omp_get_wtime();
 	std::cout << sum(vec, vec.size()) << "\n";
-	std::cout << "Took " << (omp_get_wtime() - t0) * 1000 << " ms\n";
+	std::cout << "Sum " << (omp_get_wtime() - t0) * 1000 << " ms\n";
+	std::fill_n(vec.begin(), vec.size(), 3);
+	t0 = omp_get_wtime();
+	std::cout << round_robin(vec, vec.size()) << "\n";
+	std::cout << "Sum with local reading " << (omp_get_wtime() - t0) * 1000 << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
 	//std::cout << "sum(vec, n) = " << std::hex << sum(vec, vec.size()) << "\n";
 	//std::cout << "sum_omp_reduce(v, n) = " << std::hex << sum_omp_reduce(vec, vec.size()) << "\n";
