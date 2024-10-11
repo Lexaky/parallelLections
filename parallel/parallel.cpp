@@ -125,21 +125,25 @@ unsigned round_robin(std::vector <unsigned> v, unsigned n) {
 int main() {
 	
 	std::vector <unsigned> vec(1 << 28, 3);
-	double t0 = omp_get_wtime();
+	auto t0 = std::chrono::steady_clock::now();
 	std::cout << sum_round_robin(vec, vec.size()) << "\n";
-	std::cout << "Round robin " << (omp_get_wtime() - t0)*1000 << " ms\n";
+	auto t1 = std::chrono::steady_clock::now();
+	std::cout << "Round robin " << std::chrono::duration_cast<std::chrono::milliseconds>(t1-t0).count() << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
-	t0 = omp_get_wtime();
+	t0 = std::chrono::steady_clock::now();
 	std::cout << sum_omp_reduce(vec, vec.size()) << "\n";
-	std::cout << "Omp reduce " << (omp_get_wtime() - t0) * 1000 << " ms\n";
+	t1 = std::chrono::steady_clock::now();
+	std::cout << "Omp reduce " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
-	t0 = omp_get_wtime();
+	t0 = std::chrono::steady_clock::now();
 	std::cout << sum(vec, vec.size()) << "\n";
-	std::cout << "Sum " << (omp_get_wtime() - t0) * 1000 << " ms\n";
+	t1 = std::chrono::steady_clock::now();
+	std::cout << "Sum " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
-	t0 = omp_get_wtime();
+	t0 = std::chrono::steady_clock::now();
 	std::cout << round_robin(vec, vec.size()) << "\n";
-	std::cout << "Sum with local reading " << (omp_get_wtime() - t0) * 1000 << " ms\n";
+	t1 = std::chrono::steady_clock::now();
+	std::cout << "Sum with local reading " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
 	//std::cout << "sum(vec, n) = " << std::hex << sum(vec, vec.size()) << "\n";
 	//std::cout << "sum_omp_reduce(v, n) = " << std::hex << sum_omp_reduce(vec, vec.size()) << "\n";
