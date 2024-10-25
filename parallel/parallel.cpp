@@ -12,7 +12,7 @@ struct partial_t {
 	unsigned value;
 };
 
-//Выравнивание элементов данных
+// Выравнивание элементов данных
 /*
 	Если данные имеют некоторый виртуальный адрес A (целое число)
 	Адрес должен делиться на некоторое число.
@@ -186,7 +186,7 @@ unsigned round_robin(std::vector<unsigned> v, unsigned n) {
 	return sum;
 }
 
-unsigned mutex_rb_rr(unsigned* v, unsigned n) 
+unsigned mutex_rb_rr(std::vector <unsigned> v, unsigned n) 
 {
 	unsigned T;
 	unsigned sum = 0;
@@ -244,6 +244,11 @@ int main() {
 	t1 = std::chrono::steady_clock::now();
 	std::cout << "Sum with local reading " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
 	std::fill_n(vec.begin(), vec.size(), 3);
+	t0 = std::chrono::steady_clock::now();
+	std::cout << mutex_rb_rr(vec, vec.size()) << "\n";
+	t1 = std::chrono::steady_clock::now();
+	std::cout << "Using mutex (critical section) " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
+
 	std::cout << "sum(vec, n) = " << std::hex << sum(vec, vec.size()) << "\n";
 	std::cout << "sum_omp_reduce(v, n) = " << std::hex << sum_omp_reduce(vec, vec.size()) << "\n";
 	std::cout << "sum_round_robin(v, n) = " << sum_round_robin(vec, vec.size());
