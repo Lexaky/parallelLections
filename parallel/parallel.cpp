@@ -8,7 +8,7 @@
 #include <chrono>
 //alignas
 struct partial_t {
-	alignas(std::hardware_destructive_interference_size)
+	alignas(std::hardware_destructive_interference_size) // = 40
 	unsigned value;
 };
 
@@ -108,15 +108,15 @@ unsigned sum_round_robin(std::vector<unsigned> v, unsigned n) {
 	return sum;
 }
 
-unsigned round_robin(std::vector <unsigned> v, unsigned n) {
+unsigned round_robin(std::vector<unsigned> v, unsigned n) {
 	n = v.size();
 	partial_t* part_sum;
-	int T;
-	int sum = 0;
+	unsigned T;
+	unsigned sum = 0;
 	#pragma omp parallel 
 	{
 		unsigned t = omp_get_thread_num();
-		int s, b, e;
+		unsigned s, b, e;
 		#pragma omp single 
 		{
 			T = omp_get_num_threads();
@@ -147,7 +147,7 @@ unsigned round_robin(std::vector <unsigned> v, unsigned n) {
 			возьмёт то количество элементов, которые лежат в s (т.е. ТОЧНОЕ количество)
 		*/
 
-		for (int i = b; i < e; i++)
+		for (unsigned i = b; i < e; i++)
 		{
 			part_sum[t].value += v[i];
 		}
@@ -186,6 +186,40 @@ unsigned round_robin(std::vector <unsigned> v, unsigned n) {
 	return sum;
 }
 
+unsigned mutex_rb_rr(unsigned* v, unsigned n) 
+{
+	unsigned T;
+	unsigned sum = 0;
+#pragma omp parallel 
+	{
+		unsigned mysum = 0;
+		unsigned t = omp_get_thread_num();
+		unsigned s, b, e;
+		T = omp_get_num_threads();
+		s = n / T;
+		b = n % T; 
+
+		if (t < b)
+			b = ++s * t;
+		else
+			b = b + s * t;
+
+		e = b + s;
+
+		for (unsigned i = b; i < e; i++)
+		{
+			mysum += v[i];
+		}
+
+		#pragma omp critical 
+		{
+			sum += mysum;
+		}
+	}
+
+	return sum;
+}
+
 // Эпоха - это фиксированная дата. Иногда это 1970-й год, 1980-й год и др.
 int main() {
 	
@@ -213,7 +247,8 @@ int main() {
 	std::cout << "sum(vec, n) = " << std::hex << sum(vec, vec.size()) << "\n";
 	std::cout << "sum_omp_reduce(v, n) = " << std::hex << sum_omp_reduce(vec, vec.size()) << "\n";
 	std::cout << "sum_round_robin(v, n) = " << sum_round_robin(vec, vec.size());
-	
+
+
 	return 0;
 }
 
