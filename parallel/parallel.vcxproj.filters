@@ -18,8 +18,13 @@
     <ClCompile Include="parallel.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="sync.cpp">
+    <ClCompile Include="num_threads.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="num_threads.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
