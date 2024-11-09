@@ -4,13 +4,13 @@
 #include <mutex>
 #include <chrono>
 #include "num_threads.h"
+#include <fstream>
 
 static unsigned thread_no = std::thread::hardware_concurrency();
 
-unsigned sum_cpp_mutex(std::vector <unsigned> v) 
+unsigned sum_cpp_mutex(std::vector <unsigned> v, unsigned v_size) 
 {
 	unsigned sum = 0;
-	unsigned v_size = v.size();
 	std::mutex mtx;
 	auto worker = [&v, &sum, &mtx, &v_size](unsigned t) {
 		unsigned local_sum = 0;
@@ -39,19 +39,23 @@ unsigned sum_cpp_mutex(std::vector <unsigned> v)
 	return sum;
 }
 
+void to_csv(std::ostream& io, std::vector<scalability_result> v) {
+	io << "N,Result,Time,Speedup,Efficiency\n";
+	for (unsigned i = 0; i < v.size(); i++) {
+		io << i << ',' << v.at(i).result << ',' << v.at(i).t << ',' << v.at(i).s << ',' << v.at(i).e << '\n';
+	}
+}
 
 int main() {
-	
-	std::vector <unsigned> vec(1 << 28, 3);
-	for (unsigned T = 1; T < std::thread::hardware_concurrency(); T++) {
-		omp_set_num_threads(T);
-		auto t0 = std::chrono::steady_clock::now();
-		std::cout << sum_cpp_mutex(vec) << "\n";
-		auto t1 = std::chrono::steady_clock::now();
-		std::cout << "sum_cpp_mutex:  " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms, using " << T << " threads\n";
+	auto sr = run_experiment(sum_cpp_mutex, 1, 10000000);
+
+	std::ofstream os("file.csv", std::ios_base::out);
+	if (os.is_open()) {
+		to_csv(os, sr);
+		os.close();
 	}
-	std::fill_n(vec.begin(), vec.size(), 3);
-	
+
+
 	return 0;
 }
 
