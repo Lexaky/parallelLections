@@ -15,7 +15,28 @@ struct scalability_result {
     double t, s, e; // Ускорение и эффективность
 };
 
+template <std::invocable<unsigned*, size_t> Fun>
+std::vector<scalability_result> run_experiment(Fun f, unsigned v_size_min, unsigned v_size_max) {
+    unsigned* v = new unsigned[v_size_max - v_size_min + 1];
+    for (unsigned i = v_size_min, j = 0; i < v_size_max; i++, j++) {
+        v[j] = i;
+    }
+    unsigned P = get_num_threads();
+    std::vector<scalability_result> scale(P);
 
+    for (unsigned T = 1; T <= P; ++T) {
+        set_num_threads(T);
+        auto t_start = std::chrono::steady_clock::now();
+        scale.at(T - 1).result = f(v, v.size());
+        auto t_end = std::chrono::steady_clock::now();
+        scale.at(T - 1).t = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count());
+        scale.at(T - 1).s = static_cast<double>(scale.at(0).t) / static_cast<double>(scale.at(T - 1).t);
+        scale.at(T - 1).e = static_cast<double>(scale.at(T - 1).s) / T;
+    }
+    v.clear();
+
+    return scale;
+}
 
 
 //Доделать перегрузки так, чтобы invocable был const unsigned *v и size_t n, причём для каждой функции суммы
