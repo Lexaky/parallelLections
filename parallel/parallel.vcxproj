@@ -132,10 +132,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="num_threads.cpp" />
+    <ClCompile Include="own_barrier_latch.cpp" />
     <ClCompile Include="parallel.cpp" />
+    <ClCompile Include="ParallelReduction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="num_threads.h" />
+    <ClInclude Include="own_barrier_latch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,7 +26,8 @@ unsigned sum_c_mutex(unsigned* v, unsigned v_size) {
 			std::scoped_lock(mtx);
 			sum += local_sum;
 		}
-		};
+	};
+	
 	std::vector <std::thread> w(get_num_threads() - 1);
 	for (unsigned t = 1; t < get_num_threads(); t++) {
 		w.at(t - 1) = std::thread(worker, t);
@@ -57,6 +58,7 @@ unsigned sum_cpp_mutex(std::vector <unsigned> v, unsigned v_size) {
 			sum += local_sum;
 		}
 	};
+
 	std::vector <std::thread> w(get_num_threads() - 1);
 	for (unsigned t = 1; t < get_num_threads(); t++) {
 		w.at(t-1) = std::thread(worker, t);
@@ -76,7 +78,7 @@ void to_csv(std::ostream& io, std::vector<scalability_result> v) {
 }
 
 int main() {
-	auto sr = run_experiment(sum_cpp_mutex, 1, 10000000);
+	auto sr = run_experiment(sum_cpp_mutex, 1u, 1u<<28);
 
 	std::ofstream os("file.csv", std::ios_base::out);
 	if (os.is_open()) {
