@@ -6,6 +6,8 @@
 #include "num_threads.h"
 #include <fstream>
 #include "omp.h"
+#include "own_barrier_latch.h"
+#include <thread>
 
 static unsigned thread_no = std::thread::hardware_concurrency();
 
@@ -16,49 +18,53 @@ struct partial_t {
 
 
 
-unsigned round_robin(std::vector<unsigned> v, unsigned n) {
-	n = v.size();
-	partial_t* part_sum;
-	unsigned T;
-	unsigned sum = 0;
-#pragma omp parallel 
-	{
-		unsigned t = omp_get_thread_num();
+unsigned localization_sum(unsigned * v, unsigned n) {
+	
+	unsigned T = get_num_threads();
+	auto part_sum = std::make_unique<partial_t[]>(T);
+	unsigned sum = 0; Barrier br(T);
+	auto worker_proc = [&part_sum, T, v, n, &br](unsigned t) {
 		unsigned s, b, e;
-#pragma omp single 
-		{
-			T = omp_get_num_threads();
-			part_sum = (partial_t*)malloc(sizeof(partial_t) * T);
-			s = n / T;
-			b = n % T;
-		}
-
+		s = n / T;
+		b = n % T;
 		part_sum[t].value = 0;
-
 		if (t < b)
 		{
 			b = (s + 1) * t;
-			e = b + s + 1; 
+			e = b + s + 1;
 		}
 		else
 		{
 			b = b + s * t;
 			e = b + s;
 		}
-
+		unsigned m = 0;
 		for (unsigned i = b; i < e; i++)
 		{
-			part_sum[t].value += v[i];
+			m += v[i];
 		}
+		part_sum[t].value = m;
+		br.arrive_and_wait();
+		for (size_t neighbor = 1, next = 2; neighbor < T; neighbor = next, next += next) {
+			if (t % next == 0 && t + neighbor < T) {
+				part_sum[t].value += part_sum[t + neighbor].value;
+			}
+			br.arrive_and_wait();
+		}
+		
+	};
 
+	// Запуск кода суммирования с потоков
+	std::vector <std::thread> w(get_num_threads() - 1);
+	for (unsigned t = 1; t < get_num_threads(); t++) {
+		w.at(t - 1) = std::thread(worker_proc, t);
+	}
+	worker_proc(0);
+	for (auto& thr : w) {
+		thr.join();
 	}
 
-	for (int j = 0; j < T; j++)
-	{
-		sum += part_sum[j].value;
-	}
-	free(part_sum);
-	return sum;
+	return part_sum[0].value;
 }
 
 unsigned sum_c_mutex(unsigned* v, unsigned v_size) {
