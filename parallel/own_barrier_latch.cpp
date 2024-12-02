@@ -3,8 +3,8 @@
 void Latch::arrive_and_wait() {
 	std::unique_lock l(this->mtx);
 	if (--T == 0) { 
-		// ≈сли после изменени€ количества потоков они равны 0,
-		// тогда дождались выполнени€ всех потоков, работа "люка" завершена
+		// If after change of threads count they are equal 0,
+		// then all threads are done, job of "Latch" is completed
 		cv.notify_all();
 	}
 	else {
@@ -17,8 +17,8 @@ void Latch::arrive_and_wait() {
 void Barrier::arrive_and_wait() {
 	std::unique_lock l(this->mtx);
 	if (--T == 0) {
-		T = T0; // ¬осстановили параметр T
-		this->barrierGeneration = !this->barrierGeneration; // —казали о том, что следующее поколение барьера может быть создано (а текущее не актуально)
+		T = T0; // Reset T parameter
+		this->barrierGeneration = !this->barrierGeneration; // Next generation of barrier could be created (current isn't actual)
 		cv.notify_all();
 	}
 	else {

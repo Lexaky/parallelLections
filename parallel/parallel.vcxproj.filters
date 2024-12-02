@@ -24,7 +24,10 @@
     <ClCompile Include="own_barrier_latch.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="ParallelReduction.cpp">
+    <ClCompile Include="Sums.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="ExperimentsRunner.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -33,6 +36,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="own_barrier_latch.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Sums.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
