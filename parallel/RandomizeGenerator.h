@@ -3,15 +3,21 @@
 #include <concepts>
 #include <type_traits>
 
-class Monoid {
+class af {
 private:
 	unsigned a, b;
 public:
-	Monoid() {
+	af() {
 		a = 1;
 		b = 0;
 	}
-	Monoid& operator *=(Monoid& x) {
+	af(unsigned aa, unsigned bb) : a(aa), b(bb) {}
+
+	unsigned operator ()(unsigned x) const {
+		return a * x + b;
+	}
+
+	af& operator *=(af& x) {
 		a = a * x.a;
 		b = a * x.b + b;
 		return *this;
@@ -37,18 +43,40 @@ public:
 	}
 };
 
-////Генерация случайных чисел в вектор v размером n; числа от x_min до x_max; entropy выступает seed'ом
-//double randomize(unsigned *v, size_t n, unsigned x_min, unsigned x_max, unsigned entropy) {
-//	/*
-//		Здесь будет вызываться функция affine_transoform(unisgned a, unsigned b)
-//	*/
-//}
-////Z_32 ->[x_min, x_max] 
-////Элемент в сс 32 отображается в элемент от x_min до x_max
-//template <class F> requires std::is_invocable_r <unsigned, F, unsigned>
-//void affine_transoform(unsigned a, unsigned b, F map) {
-//
-//}
+//Генерация случайных чисел в вектор v размером n; числа от x_min до x_max; entropy выступает seed'ом
+double randomize(unsigned *v, size_t n, unsigned x_min, unsigned x_max, unsigned entropy) {
+	/*
+		Здесь будет вызываться функция affine_transoform(unisgned a, unsigned b)
+	*/
+}
+//Z_32 ->[x_min, x_max] 
+//Элемент в сс 32 отображается в элемент от x_min до x_max
+template <class F> requires std::is_invocable_r <unsigned, F, unsigned>
+void affine_transoform(unsigned aa, unsigned bb, F map, const unsigned *v, size_t n, unsigned x0) {
+	unsigned T = get_num_threads();
+	std::vector <std::thread> v(T);
+	auto worker = [v, aa, ab, map, v, n, x0](unsigned t) {
+		unsigned s, b, e;
+		s = n / T;
+		b = n % T;
+		if (t < b)
+			b = 1 + s * t;
+		else
+			b += s * t;
+		e = b + s;
+		af gen(aa, bb);
+		for (size_t i = b; i < e; i++) {
+			v[i] = map(pow(gen, i)(x0));
+		}
+	}
+
+
+		//Доделать это дома
+		// Пример вызова ниже:
+		Например,у нас есть вектор v размером n, и пусть у нас a = 3, b = 4
+		Тогда вызов аффинного преобразования: affine_transoform(3, 4, [](auto x) {return x; }, v, n, 10)
+		тогда наши тестовые значения должны быть: 10, 34, 106, 302, 970 и т.д.
+}
 
 namespace myPow {
 	template <class T> concept monoid = requires (T x) { T(); x *= x; };

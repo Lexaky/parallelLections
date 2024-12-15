@@ -27,8 +27,8 @@ int main() {
 		os.close();
 	}*/
 	
-	Monoid k;
-	std::cout << myPow::pow(Z<1000000u>(5u), 13u).get() << "\n";
+	
+	std::cout << myPow::pow(Z<~0u>(5u), 13u).get() << "\n";
 
 	return 0;
 }
