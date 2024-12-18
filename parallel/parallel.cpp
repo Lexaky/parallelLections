@@ -10,7 +10,6 @@
 #include "Sums.h"
 #include "RandomizeGenerator.h"
 
-
 // Method to create csv file from vector that contains scalability_result objects
 void to_csv(std::ostream& io, std::vector<scalability_result> v) {
 	io << "N,Result,Time,Speedup,Efficiency\n";
@@ -28,8 +27,16 @@ int main() {
 	}*/
 	
 	
-	std::cout << myPow::pow(Z<~0u>(5u), 13u).get() << "\n";
-
+	//std::cout << myPow::pow(Z<~0u>(5u), 13u).get() << "\n";
+	const int sz = 1000;
+	unsigned* v = new unsigned[sz];
+	for (int i = 0; i < sz; i++) {
+		v[i] = i;
+	}
+	randomize(v, sz, 0, 1000, 2);
+	for (int i = 0; i < sz; i++) {
+		std::cout << v[i] << " ";
+	}
 	return 0;
 }
 
