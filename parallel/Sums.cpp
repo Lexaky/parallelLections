@@ -1,7 +1,7 @@
 #include "Sums.h"
 #include "num_threads.h"
 #include "own_barrier_latch.h"
-#include <threads.h>
+//#include <threads.h>
 
 struct partial_t {
 	alignas(std::hardware_destructive_interference_size) // = 40
@@ -52,7 +52,10 @@ unsigned localization_sum(unsigned* v, unsigned n) {
 	}
 	worker_proc(0);
 	for (auto& thr : w) {
-		thr.join();
+		if (thr.joinable())
+		{
+			thr.join();
+		}
 	}
 
 	return part_sum[0].value;
@@ -85,7 +88,10 @@ unsigned sum_c_mutex(unsigned* v, unsigned v_size) {
 	}
 	worker(0);
 	for (auto& thr : w) {
-		thr.join();
+		if (thr.joinable()) 
+		{
+			thr.join();
+		}
 	}
 	return sum;
 }
@@ -117,7 +123,10 @@ unsigned sum_cpp_mutex(std::vector <unsigned> v, unsigned v_size) {
 	}
 	worker(0);
 	for (auto& thr : w) {
-		thr.join();
+		if (thr.joinable())
+		{
+			thr.join();
+		}
 	}
 	return sum;
 }

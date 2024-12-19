@@ -131,14 +131,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ExperimentsRunner.cpp" />
     <ClCompile Include="num_threads.cpp" />
     <ClCompile Include="own_barrier_latch.cpp" />
     <ClCompile Include="parallel.cpp" />
-    <ClCompile Include="RandomizeGenerator.cpp" />
     <ClCompile Include="Sums.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ExperementsRunner.h" />
     <ClInclude Include="num_threads.h" />
     <ClInclude Include="own_barrier_latch.h" />
     <ClInclude Include="RandomizeGenerator.h" />

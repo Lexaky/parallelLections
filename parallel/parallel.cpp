@@ -6,7 +6,7 @@
 #include <fstream>
 #include "own_barrier_latch.h"
 #include <thread>
-#include "ExperimentsRunner.cpp"
+#include "ExperementsRunner.h"
 #include "Sums.h"
 #include "RandomizeGenerator.h"
 
@@ -28,7 +28,7 @@ int main() {
 	
 	
 	//std::cout << myPow::pow(Z<~0u>(5u), 13u).get() << "\n";
-	const int sz = 1000;
+	const int sz = 10;
 	unsigned* v = new unsigned[sz];
 	for (int i = 0; i < sz; i++) {
 		v[i] = i;
