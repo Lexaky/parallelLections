@@ -28,10 +28,10 @@ int main() {
 	
 	
 	//std::cout << myPow::pow(Z<~0u>(5u), 13u).get() << "\n";
-	const int sz = 10;
+	const int sz = 100;
 	unsigned* v = new unsigned[sz];
 	for (int i = 0; i < sz; i++) {
-		v[i] = i;
+		v[i] = 0;
 	}
 	randomize(v, sz, 0, 1000, 2);
 	for (int i = 0; i < sz; i++) {

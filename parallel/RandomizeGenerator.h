@@ -50,7 +50,7 @@ namespace myPow {
 	template <class T> concept monoid = requires (T x) { T(); x *= x; };
 	template <monoid T, std::unsigned_integral U>
 	T pow(T x, U n) {
-		//���������� ��������� ��������� ���������� � �������
+		
 		auto r = T();
 		while (n > 0) {
 			if ((n & 1) != 0) {
@@ -63,9 +63,6 @@ namespace myPow {
 	}
 }
 
-//Z_32 -> [x_min, x_max] 
-//������� � �� 32 ������������ � ������� �� x_min �� x_max
-//template <class F> requires std::is_invocable_r <unsigned, F, unsigned> // ����
 template <class F> requires std::invocable<F, unsigned>
 void affine_transoform(unsigned aa, unsigned bb, F map, unsigned* v, size_t n, unsigned x0) {
 	unsigned T = get_num_threads();
@@ -90,44 +87,24 @@ void affine_transoform(unsigned aa, unsigned bb, F map, unsigned* v, size_t n, u
 		w.emplace_back(worker, t);
 	}
 	worker(0);
-	for (auto& thr : w) 
+	for (auto& thr : w)
 	{
-		if (thr.joinable()) //добавил проверку тут и в файле sum
+		if (thr.joinable())
 		{
 			thr.join();
 		}
 	}
-
-	//�������� ��� ����
-	// ������ ������ ����:
-	/*��������,� ��� ���� ������ v �������� n, � ����� � ��� a = 3, b = 4
-	����� ����� ��������� ��������������: affine_transoform(3, 4, [](auto x) {return x; }, v, n, 10)
-	����� ���� ��������� �������� ������ ����: 10, 34, 106, 302, 970 � �.�.*/
 }
 
-
-//��������� ��������� ����� � ������ v �������� n; ����� �� x_min �� x_max; entropy ��������� seed'��
 void randomize(unsigned* v, size_t n, unsigned x_min, unsigned x_max, unsigned entropy) {
 	unsigned a = 3; // parameter of affine transformation
 	unsigned b = 7; // same
 	unsigned range = x_max - x_min + 1;
 
-	// Lambda to transformate numbers into interval [x_min, x_max]
 	auto map = [range, x_min](unsigned x) -> unsigned {
 		return (x % range) + x_min;
 	};
 
-	/*
-		entropy (seed) parameter using to set starting x value (x0) to get random numbers
-		if a = 3, b = 4 and entropy = 10 then x0 = 10
-		v[0] = 10
-		v[1] = a * v[0] + b = 3 * 10 + 4 = 34
-		v[2] = a * v[1] + b = 3 * 34 + 4 = 106
-		...
-		v[n] = a * v[n-1] + b
-	*/
-
-	// call affine transform
 	affine_transoform(a, b, map, v, n, entropy);
 }
 
