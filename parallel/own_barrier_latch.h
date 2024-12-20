@@ -22,7 +22,7 @@ private:
 	std::mutex mtx;
 	unsigned T;
 	bool barrierGeneration = false;
-	const unsigned T0; // default count of threads
+	const unsigned T0;
 
 public:
 	Barrier(const unsigned threads) : T(threads),T0(threads) {}

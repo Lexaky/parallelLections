@@ -1,12 +1,20 @@
 #include "Sums.h"
 #include "num_threads.h"
 #include "own_barrier_latch.h"
-//#include <threads.h>
+#include <omp.h>
 
 struct partial_t {
 	alignas(std::hardware_destructive_interference_size) // = 40
 		unsigned value;
 };
+
+/*
+	1) Без выравнивания сумма (т.е. просто распараллелили и получили сумму)
+	2) С выравниванием partial_t
+	3) С хорошей локальностью чтения
+	4, 5) С мьютексом и автоматической редукцией (ещё 2)
+	6) Ручная редукция
+*/
 
 // Tree summarization
 unsigned localization_sum(unsigned* v, unsigned n) {
@@ -97,6 +105,7 @@ unsigned sum_c_mutex(unsigned* v, unsigned v_size) {
 }
 
 // Same method to uppon, input parameter is vector for cpp calls
+// ЭТО НЕ НАДО
 unsigned sum_cpp_mutex(std::vector <unsigned> v, unsigned v_size) {
 	unsigned sum = 0;
 	std::mutex mtx;
@@ -129,4 +138,149 @@ unsigned sum_cpp_mutex(std::vector <unsigned> v, unsigned v_size) {
 		}
 	}
 	return sum;
+}
+
+unsigned sum_omp_reduce(unsigned* v, unsigned n) {
+	unsigned sum = 0;
+#pragma omp parallel for reduction (+ : sum)
+	for (int i = 0; i < n; i++) {
+		sum += v[i];
+	}
+	return sum;
+}
+
+unsigned sum(unsigned* v, unsigned n) {
+	unsigned sum = 0;
+	for (int i = 0; i < n; i++) {
+		sum += v[i];
+	}
+	return sum;
+}
+
+//round_robin algorithm
+unsigned sum_round_robin(unsigned* v, unsigned n) {
+	unsigned sum = 0;
+	unsigned T = 0;
+	// Введём массив сумм каждого потока
+	partial_t* part_sum;
+
+#pragma omp parallel
+	{
+		unsigned t = omp_get_thread_num();
+		// T - count of threads
+		// t - index of thread
+#pragma omp single 
+		{
+			T = omp_get_num_threads();
+			part_sum = (partial_t*)malloc(sizeof(partial_t) * T);
+		}
+		part_sum[t].value = 0;
+		for (int i = t; i < n; i += T)
+		{
+			part_sum[t].value += v[i];
+		}
+	}
+	for (int i = 0; i < T; ++i) {
+		sum += part_sum[i].value;
+	}
+	free(part_sum);
+	return sum;
+}
+
+unsigned round_robin(unsigned *v, unsigned n) {
+	partial_t* part_sum;
+	int T;
+	int sum = 0;
+#pragma omp parallel 
+	{
+		unsigned t = omp_get_thread_num();
+#pragma omp single 
+		{
+			T = omp_get_num_threads();
+			part_sum = (partial_t*)malloc(sizeof(partial_t) * T);
+		}
+		part_sum[t].value = 0;
+		int s = n / T;
+		int b = n % T;
+
+		if (t < b)
+			b = (s + 1) * t;
+		else
+			b += s * t;
+
+		int e = b + s;
+
+		for (int i = b; i < e; i++)
+		{
+			part_sum[t].value += v[i];
+		}
+	}
+	for (int j = 0; j < T; j++)
+	{
+		sum += part_sum[j].value;
+	}
+	free(part_sum);
+	return sum;
+}
+
+unsigned mutex_rb_rr(unsigned* v, unsigned n)
+{
+	unsigned T;
+	unsigned sum = 0;
+#pragma omp parallel 
+	{
+		unsigned mysum = 0;
+		unsigned t = omp_get_thread_num();
+		unsigned s, b, e;
+		T = omp_get_num_threads();
+		s = n / T;
+		b = n % T;
+
+		if (t < b)
+			b = ++s * t;
+		else
+			b = b + s * t;
+
+		e = b + s;
+
+		for (unsigned i = b; i < e; i++)
+		{
+			mysum += v[i];
+		}
+
+#pragma omp critical 
+		{
+			sum += mysum;
+		}
+	}
+
+	return sum;
+}
+
+unsigned sum_round_robin_No_Localization(unsigned* v, unsigned n) { 
+ unsigned sum = 0; 
+ unsigned T = 0; 
+ // Массив сумм каждого потока 
+ unsigned* part_sum; 
+ 
+#pragma omp parallel 
+ { 
+  unsigned t = omp_get_thread_num(); 
+  // T - count of threads 
+  // t - index of thread 
+#pragma omp single 
+  { 
+   T = omp_get_num_threads(); 
+   part_sum = (unsigned*)calloc(sizeof v[0], T); 
+  } 
+  for (int i = t; i < n; i += T) { 
+   part_sum[t] += v[i]; 
+  } 
+ } 
+ sum = part_sum[0]; 
+ for (int i = 1; i < T; ++i) { 
+  sum += part_sum[i]; 
+ } 
+ free(part_sum); 
+ return sum; 
 }

@@ -6,6 +6,8 @@
 #include <vector>
 #include "num_threads.h"
 
+// Линейный конгрдентн. генератор
+
 class af {
 private:
 	unsigned a, b;
@@ -50,7 +52,6 @@ namespace myPow {
 	template <class T> concept monoid = requires (T x) { T(); x *= x; };
 	template <monoid T, std::unsigned_integral U>
 	T pow(T x, U n) {
-		
 		auto r = T();
 		while (n > 0) {
 			if ((n & 1) != 0) {
@@ -97,8 +98,8 @@ void affine_transoform(unsigned aa, unsigned bb, F map, unsigned* v, size_t n, u
 }
 
 void randomize(unsigned* v, size_t n, unsigned x_min, unsigned x_max, unsigned entropy) {
-	unsigned a = 3; // parameter of affine transformation
-	unsigned b = 7; // same
+	unsigned a = 0x8088405; // parameter of affine transformation
+	unsigned b = 1; // same
 	unsigned range = x_max - x_min + 1;
 
 	auto map = [range, x_min](unsigned x) -> unsigned {
