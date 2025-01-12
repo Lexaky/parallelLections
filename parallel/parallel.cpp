@@ -12,13 +12,21 @@
 
 // Method to create csv file from vector that contains scalability_result objects
 void to_csv(std::ostream& io, std::vector<scalability_result> v) {
-	io << "N,Result,Time,Speedup,Efficiency\n";
+	io << "Threads,Result,Time,Speedup,Efficiency\n";
 	for (unsigned i = 0; i < v.size(); i++) {
 		io << i << ',' << v.at(i).result << ',' << v.at(i).t << ',' << v.at(i).s << ',' << v.at(i).e << '\n';
 	}
 }
+
+void to_csv_wo_result(std::ostream& io, std::vector<scalability_result> v) {
+	io << "N,Time,Speedup,Efficiency\n";
+	for (unsigned i = 0; i < v.size(); i++) {
+		io << i+1 << ',' << v.at(i).t << ',' << v.at(i).s << ',' << v.at(i).e << '\n';
+	}
+}
+
 int main() {
-	auto sr = run_experiment(sum_c_mutex, 1u, 1u<<28);
+	/*auto sr = run_experiment(sum_c_mutex, 1u, 1u<<28);
 
 	std::ofstream os("sum_c_mutex.csv", std::ios_base::out);
 	if (os.is_open()) {
@@ -70,17 +78,24 @@ int main() {
 	if (os8.is_open()) {
 		to_csv(os8, sr8);
 		os8.close();
-	}
-	//std::cout << myPow::pow(Z<~0u>(5u), 13u).get() << "\n";
-	/*const int sz = 100;
-	unsigned* v = new unsigned[sz];
-	for (int i = 0; i < sz; i++) {
-		v[i] = 0;
-	}
-	randomize(v, sz, 10, 20, 0);
-	for (int i = 0; i < sz; i++) {
-		std::cout << v[i] << " ";
 	}*/
+
+	//randomize experiment
+	unsigned sz = 2 << 20; // 2^20 elements in array
+	unsigned* v = new unsigned[sz];
+	auto randomExp = run_experiment_rand(randomize, sz, 0, 1000, 0);
+	for (int i = 0; i < randomExp.size(); i++) {
+		std::cout << "Cores: " << i + 1 << "\n";
+		std::cout << "time (ms): " << randomExp.at(i).t << "\n";
+		std::cout << "speedup: " << randomExp.at(i).s << "\n";
+		std::cout << "efficiency: " << randomExp.at(i).e << "\n\n";
+	}
+	std::ofstream randomizerInput("randomize_experiment.csv", std::ios_base::out);
+	if (randomizerInput.is_open()) {
+		to_csv_wo_result(randomizerInput, randomExp);
+		randomizerInput.close();
+	}
+
 	return 0;
 }
 
